@@ -8,11 +8,27 @@ this repo originally contained; that template is still recoverable from git hist
 "Initial commit").
 
 - **Owner:** Sungyoung Moon (sungyoungmn@gmail.com, github.com/sungyoungmoon)
-- **Host:** GitHub Pages at `sungyoungmoon.github.io`
+- **Live at:** https://sungyoungmoon.com (custom domain) and https://sungyoungmoon.github.io
 - **Remote:** https://github.com/sungyoungmoon/sungyoungmoon.github.io.git (local `main` tracks `origin/main`)
-- **Deploy:** `.github/workflows/deploy.yml` uploads the repo root as-is on every push to `main`.
-- **Predecessor site:** sungyoungmoon.com (old Hugo site) — several GIFs and the AGS logo were
-  taken from it, and its layout inspired the current single-page + left-sidebar structure.
+- **Predecessor site:** the same sungyoungmoon.com domain used to serve a **Hugo Academic site
+  from the separate `sungyoung` repo, built and hosted on Netlify**. Several GIFs and the AGS
+  logo were taken from it, and its layout inspired the current sidebar structure. That repo is
+  untouched and still holds the old site if it's ever needed.
+
+## Hosting & deploy
+
+- **GitHub Pages, branch-based:** source is `main` / `/` (`build_type: legacy`). There is **no
+  Actions workflow** and none is needed — every push to `main` republishes the repo root.
+- `.nojekyll` at the root stops Pages from running the files through Jekyll.
+- `CNAME` at the root holds `sungyoungmoon.com`, which is what attaches the custom domain.
+  Deleting it detaches the domain — don't.
+- **DNS:** registered at Namecheap, using Namecheap BasicDNS (moved off Netlify DNS on
+  2026-08-06). Apex has four A records to GitHub's `185.199.108–111.153`; `www` is a CNAME to
+  `sungyoungmoon.github.io.`
+- **Pushing workflow files is blocked.** The `gh` token has `gist, read:org, repo` but not
+  `workflow`, so any push that creates or updates a file under `.github/workflows/` is rejected
+  by the remote (deletions are fine). Run `gh auth refresh -h github.com -s workflow` if that
+  ever becomes necessary.
 
 ## Working rules (standing, from the user)
 
