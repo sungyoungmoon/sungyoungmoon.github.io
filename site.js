@@ -32,9 +32,11 @@ if (sections.length) {
 
 // Apple-style scroll reveal: elements fade up as they enter the viewport,
 // staggered when several siblings arrive together.
-const revealTargets = document.querySelectorAll(
-  '.page-title, .section-heading, .about-body, .two-col > div, .xp-item, .project-card, .page-lede'
-);
+const revealTargets = [
+  ...document.querySelectorAll(
+    '.page-title, .section-heading, .about-body, .two-col > div, .xp-item, .project-card, .page-lede'
+  ),
+];
 revealTargets.forEach((el) => el.classList.add('reveal'));
 
 const io = new IntersectionObserver(
@@ -45,14 +47,35 @@ const io = new IntersectionObserver(
       // Stagger siblings that share a parent and reveal in the same batch
       const batch = entries.filter((e) => e.isIntersecting && e.target.parentElement === el.parentElement);
       const index = batch.findIndex((e) => e.target === el);
-      el.style.transitionDelay = `${Math.min(index, 4) * 90}ms`;
-      el.classList.add('visible');
-      io.unobserve(el);
+      reveal(el, Math.min(index, 4) * 90);
     }
   },
   { threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
 );
+
+function reveal(el, delay = 0) {
+  el.style.transitionDelay = `${delay}ms`;
+  el.classList.add('visible');
+  io.unobserve(el);
+}
+
 revealTargets.forEach((el) => io.observe(el));
+
+// Fail-safe: an entrance animation must never leave content permanently hidden.
+// Opening the page at a hash (/#experience), a restored scroll position, or
+// find-in-page can all put the viewport past an element before the observer
+// ever reports it — leaving it stuck at opacity 0. Sweep anything at or above
+// the fold and show it immediately.
+function sweepReveals() {
+  for (const el of revealTargets) {
+    if (el.classList.contains('visible')) continue;
+    if (el.getBoundingClientRect().top < window.innerHeight) reveal(el);
+  }
+}
+
+sweepReveals();
+window.addEventListener('load', sweepReveals);
+window.addEventListener('hashchange', sweepReveals);
 
 // Sidebar: gentle entrance on load
 document.querySelector('.sidebar')?.classList.add('reveal-now');

@@ -45,7 +45,8 @@ Design went: long single page → 3 separate pages → **merged back into ONE sc
 (user: "if you drag down i want to show experience and project like sungyoungmoon.com").
 
 ```
-<header>  sticky frosted nav — brand · Home/Experience/Projects anchors · ◐ theme toggle
+<header>  sticky frosted nav — brand · Home/Experience/Projects anchors ·
+          Resume (opens the PDF in a new tab) · ◐ theme toggle
 <main>
   .layout.container            ← CSS grid: 300px sidebar + content
     <aside.sidebar>            ← sticky on desktop, stacks centered on mobile
@@ -73,7 +74,10 @@ style.css                        All styling — Apple-inspired, light + dark th
 site.js                          Theme toggle · nav scrollspy · IntersectionObserver reveals
 context.md                       This file
 .github/workflows/deploy.yml     GitHub Pages deploy of repo root on push to main
-files/Sungyoung_Moon_Resume.pdf  Resume PDF (8.5.26 version — includes the SK hynix role)
+files/Sungyoung_Moon_Resume.pdf  Resume PDF — 2 pages, from ~/Desktop/"Resume - Sungyoung_Moon.pdf".
+                                 Linked from three places, all at ?v=3: the nav "Resume", the
+                                 sidebar "View Resume ›" (both open in a new tab), and the footer
+                                 "Resume" (has `download`, so it saves instead of opening).
 images/
   profile.jpg      User's GitHub avatar (hiking photo)
   skhynix.png      SK hynix logo
@@ -109,10 +113,22 @@ images/
   persists to `localStorage` under key `theme`.
 - **Motion:** IntersectionObserver scroll reveal with 90ms stagger between siblings, guarded by
   `prefers-reduced-motion`. Inspired by apple.com/macbook-pro, which the user cited twice.
-- **Mobile (`max-width: 760px`):** two-row centered nav (brand + absolutely-positioned toggle on
-  row one, links centered on row two), `scroll-padding-top: 6.5rem`, timeline rail hidden,
-  `.xp-item` goes column-direction, `.project-grid` collapses to one column. A separate
-  `max-width: 900px` rule stacks `.two-col` with a `1.25rem` gap (fixes a card-overlap bug).
+  **`sweepReveals()` in site.js is a required fail-safe, not an optimization.** `.reveal` sets
+  `opacity: 0`, so any element the observer never reports stays invisible *forever*. Opening the
+  page at a hash (`/#experience`) did exactly that — verified: `.about-body` computed opacity was
+  `0` on a hash load vs `1` on a plain load, i.e. a blank page. The sweep runs at startup, on
+  `load`, and on `hashchange`, showing anything already at or above the fold. Don't remove it.
+  (Note: headless-Chrome screenshots are unreliable for fragment URLs — the sticky nav renders
+  at the wrong offset — so verify this with DOM instrumentation, not screenshots.)
+- **Mobile (`max-width: 760px`):** the nav becomes a **single row with an iOS-style segmented
+  control** — `.nav-links` gets a `--seg-bg` track at 980px radius and the `.active` link becomes
+  a raised `--card` chip with `--seg-chip-shadow`. `.brand` is `display: none` here on purpose:
+  the profile block repeats the name ~20px below it, and that duplication is what made the old
+  two-row bar look cluttered. Also: `scroll-padding-top: 4.5rem` (matches the 3.15rem nav),
+  timeline rail hidden, `.xp-item` goes column-direction, `.project-grid` collapses to one
+  column. A separate `max-width: 900px` rule stacks `.two-col` with a `1.25rem` gap (fixes a
+  card-overlap bug). Type in the segmented control is sized to fit four items at 390px — adding
+  a fifth would overflow.
 
 ## Site content (all real — never use placeholder text)
 
