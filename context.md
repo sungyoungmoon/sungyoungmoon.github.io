@@ -28,7 +28,39 @@ this repo originally contained; that template is still recoverable from git hist
 - **Pushing workflow files is blocked.** The `gh` token has `gist, read:org, repo` but not
   `workflow`, so any push that creates or updates a file under `.github/workflows/` is rejected
   by the remote (deletions are fine). Run `gh auth refresh -h github.com -s workflow` if that
-  ever becomes necessary.
+  ever becomes necessary. `.github/workflows/deploy.yml` therefore sits **untracked** on disk;
+  it is redundant under branch-based Pages and can simply be deleted.
+
+### Verifying a deploy
+
+**Pages builds here are slow and occasionally fail.** Observed on 2026-08-06: successful builds
+took **287s and 358s**, and one build errored outright with only the generic message
+`Page build failed.` (no Liquid syntax in the repo, `.nojekyll` committed, clean tree — i.e.
+transient GitHub-side flakiness, not a repo problem). Budget ~5–10 minutes before assuming
+anything is wrong, and re-check the build list rather than the top-level `status` field, which
+lags badly — it reported `building` long after content had actually gone live.
+
+```sh
+# build history (most recent first) — the reliable signal
+gh api repos/sungyoungmoon/sungyoungmoon.github.io/pages/builds \
+  --jq '.[0:3][] | "\(.status)  \(.commit[0:7])  \(.created_at)"'
+
+# force a rebuild without an empty commit
+gh api -X POST repos/sungyoungmoon/sungyoungmoon.github.io/pages/builds
+
+# check what the edge is actually serving, bypassing local DNS + browser cache
+curl -s --resolve sungyoungmoon.com:443:185.199.108.153 \
+  https://sungyoungmoon.com/ | grep -o 'style.css?v=[0-9]*'
+```
+
+Two gotchas that cost real time:
+- **zsh does not word-split unquoted variables**, so `R="--resolve host:443:ip"; curl $R …`
+  fails with "option … is unknown". Write the flag inline.
+- **Headless-Chrome screenshots are unreliable for fragment URLs** (`/index.html#experience`) —
+  the sticky nav renders at the wrong offset and content appears blank. Verify hash-load
+  behaviour with DOM instrumentation (computed `opacity` via an on-screen iframe), never
+  screenshots. Also note an iframe positioned off-screen suppresses IntersectionObserver, so
+  probe iframes must be visible or every element reads as un-revealed.
 
 ## Working rules (standing, from the user)
 
