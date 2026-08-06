@@ -124,7 +124,11 @@ images/
   control** — `.nav-links` gets a `--seg-bg` track at 980px radius and the `.active` link becomes
   a raised `--card` chip with `--seg-chip-shadow`. `.brand` is `display: none` here on purpose:
   the profile block repeats the name ~20px below it, and that duplication is what made the old
-  two-row bar look cluttered. Also: `scroll-padding-top: 4.5rem` (matches the 3.15rem nav),
+  two-row bar look cluttered. The ◐ toggle is enlarged to a **42×42 touch target** and inset
+  `0.75rem` from the edge — at its desktop size it was a ~24px box flush against the screen
+  edge and the user reported it was hard to tap. `.nav-links` carries `margin-right: 3rem` to
+  reserve that space, so don't remove it or the pill will collide with the toggle. Also:
+  `scroll-padding-top: 4.5rem` (matches the 3.15rem nav),
   timeline rail hidden, `.xp-item` goes column-direction, `.project-grid` collapses to one
   column. A separate `max-width: 900px` rule stacks `.two-col` with a `1.25rem` gap (fixes a
   card-overlap bug). Type in the segmented control is sized to fit four items at 390px — adding
