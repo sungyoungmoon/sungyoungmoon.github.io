@@ -56,6 +56,11 @@ curl -s --resolve sungyoungmoon.com:443:185.199.108.153 \
 Two gotchas that cost real time:
 - **zsh does not word-split unquoted variables**, so `R="--resolve host:443:ip"; curl $R …`
   fails with "option … is unknown". Write the flag inline.
+- **`--window-size=390,844` does not give you a mobile layout viewport.** Headless Chrome keeps a
+  desktop-width layout viewport, so the shot shows content spilling off the right edge and the
+  theme toggle missing — a pure artifact. Observed on 2026-08-07 while checking the project
+  pages, which are in fact fine at 390px. Render the page inside a **390px-wide `<iframe>`** on a
+  wide host window and screenshot that instead.
 - **Headless-Chrome screenshots are unreliable for fragment URLs** (`/index.html#experience`) —
   the sticky nav renders at the wrong offset and content appears blank. Verify hash-load
   behaviour with DOM instrumentation (computed `opacity` via an on-screen iframe), never
@@ -77,8 +82,8 @@ Design went: long single page → 3 separate pages → **merged back into ONE sc
 (user: "if you drag down i want to show experience and project like sungyoungmoon.com").
 
 ```
-<header>  sticky frosted nav — brand · Home/Experience/Projects anchors ·
-          Resume (opens the PDF in a new tab) · ◐ theme toggle
+<header>  sticky frosted nav — brand · Home/Experience/Projects anchors · ◐ theme toggle
+          (a fourth "Resume" link was removed on 2026-08-07 — see the mobile note below)
 <main>
   .layout.container            ← CSS grid: 300px sidebar + content
     <aside.sidebar>            ← sticky on desktop, stacks centered on mobile
@@ -98,18 +103,39 @@ Design went: long single page → 3 separate pages → **merged back into ONE sc
 Preview locally with `python3 -m http.server 3000` in the repo root, then
 http://localhost:3000/index.html.
 
+### Project URLs (printed on the resume)
+
+The resume prints `sungyoungmoon.com/project/successorator` and
+`sungyoungmoon.com/project/happyplant`. Those were real detail pages on the **old Hugo site**
+and 404'd after the rewrite, so they now exist again as hand-written pages at
+`project/<slug>/index.html`. GitHub Pages serves a directory's `index.html`, and 301s the
+no-trailing-slash form the resume uses, so both spellings resolve.
+
+Two things these pages depend on, both verified:
+- **The `#theme-toggle` button must stay in the markup.** `site.js` line 5 calls
+  `getElementById('theme-toggle').addEventListener` with no null guard — drop the button and the
+  script throws there, which also kills the reveals below it and leaves the page at `opacity: 0`.
+- Scrollspy is a **no-op here by design**: it selects `.nav-links a[href^="#"]`, and these pages
+  use `../../index.html#…`, so nothing matches, `sections` is empty, and the hand-set
+  `class="active"` on Projects survives.
+
+Copy on both pages is the exact tagline already used on the index cards — not a rewrite.
+`/project/` itself has no index page, so that bare URL 404s; add one if it ever gets linked.
+
 ## Files
 
 ```
 index.html                       The entire site (single page, anchor sections)
+project/successorator/index.html Standalone project page (see "Project URLs" below)
+project/happyplant/index.html    Standalone project page
 style.css                        All styling — Apple-inspired, light + dark themes
 site.js                          Theme toggle · nav scrollspy · IntersectionObserver reveals
 context.md                       This file
 .github/workflows/deploy.yml     GitHub Pages deploy of repo root on push to main
 files/Sungyoung_Moon_Resume.pdf  Resume PDF — 2 pages, from ~/Desktop/"Resume - Sungyoung_Moon.pdf".
-                                 Linked from three places, all at ?v=3: the nav "Resume", the
-                                 sidebar "View Resume ›" (both open in a new tab), and the footer
-                                 "Resume" (has `download`, so it saves instead of opening).
+                                 Linked from two places, both at ?v=3: the sidebar "View Resume ›"
+                                 (opens in a new tab) and the footer "Resume" (has `download`, so
+                                 it saves instead of opening). The nav link was removed.
 images/
   profile.jpg      User's GitHub avatar (hiking photo)
   skhynix.png      SK hynix logo
@@ -158,13 +184,26 @@ images/
   the profile block repeats the name ~20px below it, and that duplication is what made the old
   two-row bar look cluttered. The ◐ toggle is enlarged to a **42×42 touch target** and inset
   `0.75rem` from the edge — at its desktop size it was a ~24px box flush against the screen
-  edge and the user reported it was hard to tap. `.nav-links` carries `margin-right: 3rem` to
-  reserve that space, so don't remove it or the pill will collide with the toggle. Also:
-  `scroll-padding-top: 4.5rem` (matches the 3.15rem nav),
-  timeline rail hidden, `.xp-item` goes column-direction, `.project-grid` collapses to one
-  column. A separate `max-width: 900px` rule stacks `.two-col` with a `1.25rem` gap (fixes a
-  card-overlap bug). Type in the segmented control is sized to fit four items at 390px — adding
-  a fifth would overflow.
+  edge and the user reported it was hard to tap. Also: `scroll-padding-top: 4.5rem` (matches the
+  3.15rem nav), timeline rail hidden, `.xp-item` goes column-direction, `.project-grid` collapses
+  to one column. A separate `max-width: 900px` rule stacks `.two-col` with a `1.25rem` gap (fixes
+  a card-overlap bug).
+
+  **Centering the segmented pill — the constraint that governs how many nav items fit.**
+  The pill is centered in the real viewport and the ◐ toggle is `position: absolute`, so the
+  toggle owns the last **54px** (42px box + 0.75rem inset). A centered pill therefore only
+  clears it while
+
+      pill width ≤ viewport − 108
+
+  It used to carry `margin-right: 3rem` to reserve that space, which is exactly what the user
+  reported on 2026-08-07 as "the top menu is not center" — a reserving margin shifts a centered
+  item by **half** the margin, so the pill sat 24px left of centre at every width. Measured, the
+  four-item pill was 292px, which also **overlapped the toggle by 23px at 320px and ran off the
+  left edge**. Dropping "Resume" from the nav took the pill to 222px, which centers cleanly and
+  clears the toggle from ~340px up; a `max-width: 360px` block trims type to 0.72rem so 320px
+  works too. **Adding a fourth item breaks centering again** — 292px needs a 400px viewport.
+  Verify with the iframe measurement technique in the gotchas above, not a raw screenshot.
 
 ## Site content (all real — never use placeholder text)
 
@@ -210,6 +249,7 @@ disclosures; those live in the resume PDF.
 - A custom SVG logo for the Gaming/Anime entry
 - The "Now" card, the "More" coursework disclosures, and the Activities list
 - "Download Resume" as button copy (now "View Resume ›")
+- A "Resume" link in the top nav (removed 2026-08-07; it is still in the sidebar and footer)
 - A click-to-copy email pill in the sidebar
 - The `AI APPLICATIONS` label under the sidebar role
 

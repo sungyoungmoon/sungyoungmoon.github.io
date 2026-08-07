@@ -884,6 +884,60 @@ h3 {
   text-decoration: underline;
 }
 
+/* ---------- Project detail page (/project/<slug>/) ----------
+   Standalone pages behind the project URLs printed on the resume. */
+/* Keeps the 1080px .container width so the left edge lines up with the nav
+   brand and with every section on the home page; only the prose is capped. */
+.project-page {
+  padding-top: 2.75rem;
+  padding-bottom: 4.5rem;
+}
+
+.back-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.back-link::before {
+  content: '‹ ';
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+.project-page .project-tag {
+  margin-top: 1.75rem;
+}
+
+.project-page h1 {
+  font-size: clamp(1.9rem, 3.5vw, 2.4rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  margin-top: 0.2rem;
+}
+
+/* Capped: at the full 760px column the square GIF alone is taller than the
+   viewport and pushes the description off-screen. */
+.project-page .project-media {
+  display: block;
+  max-width: 460px;
+  margin-top: 1.5rem;
+  margin-bottom: 0;
+}
+
+.project-page .about-body {
+  max-width: 640px;
+  margin-top: 1.5rem;
+}
+
+.project-page .project-link {
+  display: inline-block;
+  margin-top: 1.5rem;
+}
+
 /* ---------- Footer ---------- */
 .site-footer {
   border-top: 1px solid var(--border);
@@ -992,11 +1046,15 @@ h3 {
     font-size: 1.15rem;
   }
 
-  /* Reserve room for the toggle so the centered pill doesn't run into it */
+  /* The pill is centered in the real viewport, so it has to clear the
+     absolutely-positioned toggle on its own: the toggle owns the last 54px
+     (42px box + 0.75rem inset), so centering requires
+     pill width <= viewport - 108. Reserving room with margin-right instead
+     would shift the pill off-centre by half that margin. Three items fit;
+     a fourth pushed it past the limit. */
   .nav-links {
     gap: 0.15rem;
     padding: 0.2rem;
-    margin-right: 3rem;
     background: var(--seg-bg);
     border-radius: 980px;
   }
@@ -1096,6 +1154,16 @@ h3 {
 
   .footer-links {
     gap: 0.9rem;
+  }
+}
+
+/* Very narrow phones (iPhone SE 1st gen, Fold cover screen). A centered pill
+   clears the toggle only while its width stays under viewport - 108, which the
+   full-size type breaks below ~340px. */
+@media (max-width: 360px) {
+  .nav-links a {
+    font-size: 0.72rem;
+    padding: 0.34rem 0.42rem;
   }
 }
 
